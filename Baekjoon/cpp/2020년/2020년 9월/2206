@@ -1,0 +1,52 @@
+// 백준 2206번 벽 부수고 이동하기
+#include <bits/stdc++.h>
+#define X first
+#define Y second
+using namespace std;
+
+int n, m, res;
+char arr[1002][1002]; 
+bool visit[1002][1002][2];  // 각 좌표의 방문 여부(x,y), 이전에 벽을 부순 적이 있는 지 확인
+queue< pair< pair<int, int>, int > > Q; // {{x좌표, y좌표}, 벽을 부순 횟수}
+int px[] = {-1, 1, 0, 0}; // 
+int py[] = {0, 0, -1, 1};
+
+int main() {
+	ios_base::sync_with_stdio(false);cin.tie(0);cout.tie(0);
+	cin >> n >> m;
+	
+	for(int i=1 ; i<=n ; i++) {
+		for(int j=1 ; j<=m ; j++) {
+			cin >> arr[i][j];
+		}
+	}
+	Q.push({{1,1}, 0}); // 시작점 (1,1)
+	visit[1][1][0] = true;
+	res++;
+	
+	while(!Q.empty()) {
+		int size = Q.size();
+		for(int u=0 ; u<size ; u++) {
+			int x = Q.front().X.X, y = Q.front().X.Y;
+			int breakCnt = Q.front().Y;
+			Q.pop();
+			if(x == n && y == m) {  // (n,m)에 도착했을 때 값을 출력하고 종료
+				cout << res;
+				return 0;
+			}
+			for(int dir=0 ; dir<4 ; dir++) {  // 상하좌우 탐색
+				int nx = x + px[dir], ny = y + py[dir];
+				if(nx <= 0 || ny <= 0 || nx > n || ny > m) continue;  // 맵 범위를 넘어가면 continue
+				if(visit[nx][ny][breakCnt]) continue; // 방문한 적이 있다면 continue
+				visit[nx][ny][breakCnt] = true; // 방문 확인
+				if(arr[nx][ny] == '0') {  // 벽이 없다면 Q에 저장
+					Q.push({{nx,ny},breakCnt});
+				}else if(arr[nx][ny] == '1' && breakCnt == 0) { // 벽이 있고 이전에 벽을 부순 적이 없다면 Q에 저장
+					Q.push({{nx, ny}, 1});
+				}
+			}	
+		}
+		res++;
+	}
+	cout << "-1"; // (n, m)에 도착하지 못했을 때
+}
