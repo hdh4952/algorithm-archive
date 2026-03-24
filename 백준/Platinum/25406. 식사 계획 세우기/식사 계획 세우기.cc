@@ -7,7 +7,7 @@ int arr[MAX_N];
 int cnt[MAX_N];
 queue<int> q[MAX_N];
 priority_queue<pair<int, int>> pq;
-set<int> all_indices;
+set<pair<int, int>> first_idx;
 
 void solve() {
   for (int i=1 ; i<=N ; i++) {
@@ -17,6 +17,7 @@ void solve() {
         return;
       }
       pq.push({cnt[i], i});
+      first_idx.insert({q[i].front(), i});
     }
   }
 
@@ -33,21 +34,27 @@ void solve() {
       --cnt[menu];
       answer[i-1] = q[menu].front();
       q[menu].pop();
-      all_indices.erase(answer[i-1]);
-      pq.push({count - 1, menu});
+      first_idx.erase({answer[i-1], menu});
+      if (count > 1) {
+        pq.push({count - 1, menu});
+        first_idx.insert({q[menu].front(), menu});
+      }
       prev = menu;
     } else {
-      auto it = all_indices.begin();
-      while (arr[*it] == prev) {
+      auto it = first_idx.begin();
+      if (it->second == prev) {
         it = next(it);
       }
-      int idx = *it;
+      int idx = it->first;
       int menu = arr[idx];
       --cnt[menu];
       answer[i-1] = q[menu].front();
       q[menu].pop();
-      all_indices.erase(idx);
-      pq.push({cnt[menu], menu});
+      first_idx.erase({answer[i-1], menu});
+      if (cnt[menu]) {
+        first_idx.insert({q[menu].front(), menu});
+        pq.push({cnt[menu], menu});
+      }
       prev = menu;
     }
   }
@@ -65,7 +72,6 @@ int main() {
     cin >> arr[i];
     ++cnt[arr[i]];
     q[arr[i]].push(i);
-    all_indices.insert(i);
   }
 
   solve();
