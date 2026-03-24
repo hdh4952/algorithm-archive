@@ -1,63 +1,54 @@
 #include <bits/stdc++.h>
-#include <vector>
 using namespace std;
 
 const int MAX_N = 300'010;
 int N;
-vector<int> arr(MAX_N, 0);
-vector<int> cnt(MAX_N, 0);
-vector<bool> vis(MAX_N, false);
-vector<queue<int>> q_list(MAX_N, queue<int>());
+int arr[MAX_N];
+int cnt[MAX_N];
+queue<int> q[MAX_N];
+priority_queue<pair<int, int>> pq;
 set<int> all_indices;
 
-struct Cmp {
-  bool operator()(const pair<int, int>& a, const pair<int, int>& b) {
-    if (a.first != b.first) return a.first < b.first;
-    return q_list[b.second].front() > q_list[b.second].front();
-  }
-};
-
-priority_queue<pair<int, int>, vector<pair<int, int>>, Cmp> pq;
-
-int calc(int n) {
-  return n / 2 + 1;
-}
-
 void solve() {
-  vector<int> answer;
-  int prev = 0;
   for (int i=1 ; i<=N ; i++) {
-    while (q_list[pq.top().second].empty() || vis[q_list[pq.top().second].front()]) {
-      auto [count, menu] = pq.top();
-      pq.pop();
-      while (!q_list[menu].empty() && vis[q_list[menu].front()]) {
-        q_list[menu].pop();
+    if (cnt[i] > 0) {
+      if (cnt[i] > (N+1) / 2) {
+        cout << "-1";
+        return;
       }
+      pq.push({cnt[i], i});
+    }
+  }
 
-      if (!q_list[menu].empty()) {
-        pq.push({q_list[menu].size(), menu});
-      }
+  int prev = -1;
+  vector<int> answer(N);
+  for (int i=1 ; i<=N ; i++) {
+    while (!pq.empty() && cnt[pq.top().second] != pq.top().first) {
+      pq.pop();
     }
 
-    if (pq.top().first >= calc(N-i+1)) {
+    int remain = N - i + 1;
+    if (pq.top().first * 2 > remain) {
       auto [count, menu] = pq.top();
-      pq.pop();
-
-      int store = q_list[menu].front();
-      q_list[menu].pop();
-      vis[store] = true;
-      answer.push_back(store);
+      --cnt[menu];
+      answer[i-1] = q[menu].front();
+      q[menu].pop();
+      all_indices.erase(answer[i-1]);
+      pq.push({count - 1, menu});
       prev = menu;
-      all_indices.erase(store);
-      if (count > 1) pq.push({count-1, menu});
     } else {
       auto it = all_indices.begin();
-      while (arr[*it] == prev) it = next(it);
+      while (arr[*it] == prev) {
+        it = next(it);
+      }
       int idx = *it;
-      vis[idx] = true;
-      answer.push_back(idx);
-      prev = arr[idx];
+      int menu = arr[idx];
+      --cnt[menu];
+      answer[i-1] = q[menu].front();
+      q[menu].pop();
       all_indices.erase(idx);
+      pq.push({cnt[menu], menu});
+      prev = menu;
     }
   }
 
@@ -67,21 +58,15 @@ void solve() {
 int main() {
   ios_base::sync_with_stdio(false);
   cin.tie(0);
+  cout.tie(0);
   
   cin >> N;
   for (int i=1 ; i<=N ; i++) {
     cin >> arr[i];
     ++cnt[arr[i]];
-    q_list[arr[i]].push(i);
+    q[arr[i]].push(i);
     all_indices.insert(i);
   }
 
-  for (int i=1 ; i<=N ; i++) {
-    if (cnt[i] > 0) {
-      pq.push({cnt[i], i});
-    }
-  }
-
-  if (pq.top().first >= N / 2 + 1 + (N & 1)) cout << "-1";
-  else solve();
+  solve();
 }
