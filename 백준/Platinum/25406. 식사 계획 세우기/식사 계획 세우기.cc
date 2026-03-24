@@ -8,6 +8,7 @@ vector<int> arr(MAX_N, 0);
 vector<int> cnt(MAX_N, 0);
 vector<bool> vis(MAX_N, false);
 vector<queue<int>> q_list(MAX_N, queue<int>());
+set<int> all_indices;
 
 struct Cmp {
   bool operator()(const pair<int, int>& a, const pair<int, int>& b) {
@@ -16,20 +17,15 @@ struct Cmp {
   }
 };
 
-// {식당메뉴 파는 식당 개수, 식당 메뉴}
-// 식당 개수가 클수록, 식당 메뉴를 파는 식당 중 가장 작은 식당 번호가 작을수록 먼저옴
 priority_queue<pair<int, int>, vector<pair<int, int>>, Cmp> pq;
 
 int calc(int n) {
-  if (n & 1) return n / 2 + 1;
-  return n;
+  return n / 2 + 1;
 }
 
 void solve() {
   vector<int> answer;
-
-  int visIndex = 1, temp = 1;
-  int pre = 0;
+  int prev = 0;
   for (int i=1 ; i<=N ; i++) {
     while (q_list[pq.top().second].empty() || vis[q_list[pq.top().second].front()]) {
       auto [count, menu] = pq.top();
@@ -37,6 +33,7 @@ void solve() {
       while (!q_list[menu].empty() && vis[q_list[menu].front()]) {
         q_list[menu].pop();
       }
+
       if (!q_list[menu].empty()) {
         pq.push({q_list[menu].size(), menu});
       }
@@ -50,21 +47,17 @@ void solve() {
       q_list[menu].pop();
       vis[store] = true;
       answer.push_back(store);
-      pre = menu;
+      prev = menu;
+      all_indices.erase(store);
       if (count > 1) pq.push({count-1, menu});
     } else {
-      visIndex = temp;
-      while (vis[visIndex]) {
-        ++visIndex;
-        temp = visIndex;
-      }
-      while (vis[visIndex] || arr[visIndex] == pre) {
-        ++visIndex;
-      }
-      vis[visIndex] = true;
-      answer.push_back(visIndex);
-      pre = arr[visIndex];
-      ++visIndex;
+      auto it = all_indices.begin();
+      while (arr[*it] == prev) it = next(it);
+      int idx = *it;
+      vis[idx] = true;
+      answer.push_back(idx);
+      prev = arr[idx];
+      all_indices.erase(idx);
     }
   }
 
@@ -80,6 +73,7 @@ int main() {
     cin >> arr[i];
     ++cnt[arr[i]];
     q_list[arr[i]].push(i);
+    all_indices.insert(i);
   }
 
   for (int i=1 ; i<=N ; i++) {
